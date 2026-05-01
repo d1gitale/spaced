@@ -1,4 +1,4 @@
-module spaced
+module github.com/d1gitale/spaced
 
 go 1.26.1
 

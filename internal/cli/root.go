@@ -6,7 +6,7 @@ import "github.com/spf13/cobra"
 // NewRootCmd creates the root command and adds all subcommands.
 func NewRootCmd() *cobra.Command {
 	rootCmd := &cobra.Command{
-		Use:   "spaced",
+		Use:   "github.com/d1gitale/spaced",
 		Short: "Spaced repetition CLI",
 		Long:  "spaced is a spaced repetition tracker that helps organizing your schedule and works well with Waybar",
 	}

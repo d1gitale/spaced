@@ -2,7 +2,8 @@ package main
 
 import (
 	"log"
-	"spaced/internal/cli"
+
+	"github.com/d1gitale/spaced/internal/cli"
 )
 
 func main() {
