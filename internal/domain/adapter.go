@@ -2,8 +2,8 @@
 package domain
 
 type ReviewDB interface {
-	GetAll()
-	GetDue()
+	GetAll() []Review
+	GetDue() []Review
 	AddReview(name string)
 	DeleteReview(id int)
 	RenameReview(id int, new string)
