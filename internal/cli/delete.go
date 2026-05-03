@@ -1,12 +1,13 @@
 package cli
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/spf13/cobra"
 )
 
-func NewDeleteCmd() *cobra.Command {
+func NewDeleteCmd(ctx context.Context) *cobra.Command {
 	return &cobra.Command{
 		Use:   "delete <name>",
 		Short: "Delete a task",

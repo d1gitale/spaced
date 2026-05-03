@@ -1,10 +1,14 @@
 // Package cli handles commands parsing and calls business logic
 package cli
 
-import "github.com/spf13/cobra"
+import (
+	"context"
+
+	"github.com/spf13/cobra"
+)
 
 // NewRootCmd creates the root command and adds all subcommands.
-func NewRootCmd() *cobra.Command {
+func NewRootCmd(ctx context.Context) *cobra.Command {
 	rootCmd := &cobra.Command{
 		Use:   "github.com/d1gitale/spaced",
 		Short: "Spaced repetition CLI",
@@ -12,11 +16,11 @@ func NewRootCmd() *cobra.Command {
 	}
 
 	rootCmd.AddCommand(
-		NewAddCmd(),
-		NewListCmd(),
-		NewCheckCmd(),
-		NewRenameCmd(),
-		NewDeleteCmd(),
+		NewAddCmd(ctx),
+		NewListCmd(ctx),
+		NewCheckCmd(ctx),
+		NewRenameCmd(ctx),
+		NewDeleteCmd(ctx),
 	)
 
 	return rootCmd
@@ -24,6 +28,6 @@ func NewRootCmd() *cobra.Command {
 
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
-func Execute() error {
-	return NewRootCmd().Execute()
+func Execute(ctx context.Context) error {
+	return NewRootCmd(ctx).Execute()
 }

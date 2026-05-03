@@ -1,8 +1,9 @@
-// Package pkg contains reusable code
-package pkg
+// Package logger defines logger using zap
+package logger
 
 import (
 	"context"
+	"log"
 
 	"go.uber.org/zap"
 )
@@ -18,4 +19,15 @@ func LoggerFromCtx(ctx context.Context) *zap.Logger {
 		return l
 	}
 	return zap.NewNop()
+}
+
+func NewLogger() *zap.Logger {
+	l, err := zap.NewProduction(
+		zap.AddCaller(),
+		zap.AddStacktrace(zap.ErrorLevel),
+	)
+	if err != nil {
+		log.Fatalf("failed to instantiate logger: %v", err)
+	}
+	return l
 }

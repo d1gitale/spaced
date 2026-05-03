@@ -1,12 +1,13 @@
 package cli
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/spf13/cobra"
 )
 
-func NewCheckCmd() *cobra.Command {
+func NewCheckCmd(ctx context.Context) *cobra.Command {
 	return &cobra.Command{
 		Use:   "check <name> <grade>",
 		Short: "Update retention grade for a task",

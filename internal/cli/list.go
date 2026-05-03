@@ -1,12 +1,13 @@
 package cli
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/spf13/cobra"
 )
 
-func NewListCmd() *cobra.Command {
+func NewListCmd(ctx context.Context) *cobra.Command {
 	return &cobra.Command{
 		Use:   "list",
 		Short: "List all tasks",

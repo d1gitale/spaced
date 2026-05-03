@@ -1,12 +1,13 @@
 package cli
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/spf13/cobra"
 )
 
-func NewRenameCmd() *cobra.Command {
+func NewRenameCmd(ctx context.Context) *cobra.Command {
 	return &cobra.Command{
 		Use:   "rename <old_name> <new_name>",
 		Short: "Rename a task",

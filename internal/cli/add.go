@@ -1,12 +1,13 @@
 package cli
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/spf13/cobra"
 )
 
-func NewAddCmd() *cobra.Command {
+func NewAddCmd(ctx context.Context) *cobra.Command {
 	return &cobra.Command{
 		Use:   "add <name>",
 		Short: "Add a new task for spaced repetition",
