@@ -10,18 +10,22 @@ import (
 
 type loggerKey struct{}
 
-func WithLogger(ctx context.Context, logger *zap.Logger) context.Context {
+type Logger struct {
+	l *zap.Logger
+}
+
+func WithLogger(ctx context.Context, logger *Logger) context.Context {
 	return context.WithValue(ctx, loggerKey{}, logger)
 }
 
-func LoggerFromCtx(ctx context.Context) *zap.Logger {
+func LoggerFromCtx(ctx context.Context) *Logger {
 	if l, ok := ctx.Value(loggerKey{}).(*zap.Logger); ok {
-		return l
+		return &Logger{l: l}
 	}
-	return zap.NewNop()
+	return &Logger{l: zap.NewNop()}
 }
 
-func NewLogger() *zap.Logger {
+func NewLogger() *Logger {
 	l, err := zap.NewProduction(
 		zap.AddCaller(),
 		zap.AddStacktrace(zap.ErrorLevel),
@@ -29,5 +33,13 @@ func NewLogger() *zap.Logger {
 	if err != nil {
 		log.Fatalf("failed to instantiate logger: %v", err)
 	}
-	return l
+	return &Logger{l: l}
+}
+
+func (l *Logger) Fatal(msg string, err error) {
+	l.l.Fatal(msg, zap.Error(err))
+}
+
+func (l *Logger) Sync() error {
+	return l.l.Sync()
 }
