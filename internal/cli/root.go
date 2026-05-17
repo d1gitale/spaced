@@ -4,18 +4,27 @@ package cli
 import (
 	"context"
 
+	"github.com/d1gitale/spaced/internal/adapter/sqlite"
 	"github.com/spf13/cobra"
 )
 
-// NewRootCmd creates the root command and adds all subcommands.
-func NewRootCmd(ctx context.Context) *cobra.Command {
-	rootCmd := &cobra.Command{
+type RootCmd struct {
+	root *cobra.Command
+	db   *sqlite.Pool
+}
+
+func NewRootCmd(ctx context.Context, db *sqlite.Pool) *RootCmd {
+	rootCmd := &RootCmd{}
+
+	rootCmd.db = db
+
+	rootCmd.root = &cobra.Command{
 		Use:   "github.com/d1gitale/spaced",
 		Short: "Spaced repetition CLI",
 		Long:  "spaced is a spaced repetition tracker that helps organizing your schedule and works well with Waybar",
 	}
 
-	rootCmd.AddCommand(
+	rootCmd.root.AddCommand(
 		NewAddCmd(ctx),
 		NewListCmd(ctx),
 		NewCheckCmd(ctx),
@@ -26,8 +35,6 @@ func NewRootCmd(ctx context.Context) *cobra.Command {
 	return rootCmd
 }
 
-// Execute adds all child commands to the root command and sets flags appropriately.
-// This is called by main.main(). It only needs to happen once to the rootCmd.
-func Execute(ctx context.Context) error {
-	return NewRootCmd(ctx).Execute()
+func (rootCmd *RootCmd) Execute(ctx context.Context) error {
+	return rootCmd.root.ExecuteContext(ctx)
 }

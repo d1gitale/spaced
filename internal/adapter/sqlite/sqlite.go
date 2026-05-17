@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/d1gitale/spaced/pkg/logger"
-	_ "github.com/mattn/go-sqlite3"
+	_ "modernc.org/sqlite"
 )
 
 type Config struct {
@@ -43,6 +43,24 @@ func New(ctx context.Context, c Config) (*Pool, error) {
 	return &Pool{db: db}, nil
 }
 
+func (db *Pool) Close() error {
+	return db.db.Close()
+}
+
 func runMigrations(ctx context.Context, db *sql.DB) error {
-	return nil
+	schema := `
+	CREATE TABLE cards (
+    id             UUID PRIMARY KEY, -- или INTEGER AUTOINCREMENT для SQLite
+    name           TEXT NOT NULL,
+    due_date       DATE NOT NULL DEFAULT CURRENT_DATE,
+    repetition     INTEGER NOT NULL DEFAULT 0 CHECK (repetition >= 0),
+    interval_days  INTEGER NOT NULL DEFAULT 0 CHECK (interval_days >= 0),
+    ease_factor    REAL    NOT NULL DEFAULT 2.5 CHECK (ease_factor >= 1.3),
+    created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+	);
+	CREATE INDEX idx_cards_due ON cards (due_date ASC);
+	`
+
+	_, err := db.ExecContext(ctx, schema)
+	return err
 }
