@@ -4,16 +4,16 @@ package cli
 import (
 	"context"
 
-	"github.com/d1gitale/spaced/internal/adapter/sqlite"
+	"github.com/d1gitale/spaced/internal/domain"
 	"github.com/spf13/cobra"
 )
 
 type RootCmd struct {
 	root *cobra.Command
-	db   *sqlite.Pool
+	db   *domain.CardAdapter
 }
 
-func NewRootCmd(ctx context.Context, db *sqlite.Pool) *RootCmd {
+func NewRootCmd(ctx context.Context, db *domain.CardAdapter) *RootCmd {
 	rootCmd := &RootCmd{}
 
 	rootCmd.db = db
