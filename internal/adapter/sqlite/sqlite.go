@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/d1gitale/spaced/internal/domain"
 	"github.com/d1gitale/spaced/pkg/logger"
 	_ "modernc.org/sqlite"
 )
@@ -18,11 +19,11 @@ type Config struct {
 	DBPath      string `envconfig:"SQLITE_DB_PATH"  required:"true"`
 }
 
-type Pool struct {
+type Repo struct {
 	db *sql.DB
 }
 
-func New(ctx context.Context, c Config) (*Pool, error) {
+func New(ctx context.Context, c Config) (*Repo, error) {
 	dsn := fmt.Sprintf("%s?_busy_timeout=%d&_journal_mode=%s&_foreign_keys=ON&_cache_size=%d", c.DBPath, c.BusyTimeout, c.JournalMode, c.CacheSize)
 	db, err := sql.Open("go-sqlite3", dsn)
 	if err != nil {
@@ -40,11 +41,15 @@ func New(ctx context.Context, c Config) (*Pool, error) {
 		l.Fatal("failed to run migrations: %v", err)
 	}
 
-	return &Pool{db: db}, nil
+	return &Repo{db: db}, nil
 }
 
-func (db *Pool) Close() error {
+func (db *Repo) Close() error {
 	return db.db.Close()
+}
+
+func (db *Repo) AddCard(card *domain.Card) {
+
 }
 
 func runMigrations(ctx context.Context, db *sql.DB) error {
