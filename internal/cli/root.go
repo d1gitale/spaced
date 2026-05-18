@@ -10,10 +10,10 @@ import (
 
 type RootCmd struct {
 	root *cobra.Command
-	db   *domain.CardAdapter
+	db   domain.CardAdapter
 }
 
-func NewRootCmd(ctx context.Context, db *domain.CardAdapter) *RootCmd {
+func NewRootCmd(ctx context.Context, db domain.CardAdapter) *RootCmd {
 	rootCmd := &RootCmd{}
 
 	rootCmd.db = db

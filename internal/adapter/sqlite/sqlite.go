@@ -9,6 +9,7 @@ import (
 
 	"github.com/d1gitale/spaced/internal/domain"
 	"github.com/d1gitale/spaced/pkg/logger"
+	"github.com/google/uuid"
 	_ "modernc.org/sqlite"
 )
 
@@ -44,12 +45,32 @@ func New(ctx context.Context, c Config) (*Repo, error) {
 	return &Repo{db: db}, nil
 }
 
-func (db *Repo) Close() error {
-	return db.db.Close()
+func (repo *Repo) Close() error {
+	return repo.db.Close()
 }
 
-func (db *Repo) AddCard(card *domain.Card) {
+func (repo *Repo) GetAllCards(ctx context.Context) ([]domain.Card, error) {
+	panic("not implemented") // TODO: Implement
+}
 
+func (repo *Repo) GetDueCards(ctx context.Context) ([]domain.Card, error) {
+	panic("not implemented") // TODO: Implement
+}
+
+func (repo *Repo) CreateCard(ctx context.Context, r domain.Card) error {
+	panic("not implemented") // TODO: Implement
+}
+
+func (repo *Repo) MarkReviewed(ctx context.Context, id uuid.UUID, easinessFactor float64, interval int, repetition int, due time.Time) error {
+	panic("not implemented") // TODO: Implement
+}
+
+func (repo *Repo) RenameCard(ctx context.Context, id uuid.UUID, newName string) error {
+	panic("not implemented") // TODO: Implement
+}
+
+func (repo *Repo) RemoveCard(ctx context.Context, id uuid.UUID) error {
+	panic("not implemented") // TODO: Implement
 }
 
 func runMigrations(ctx context.Context, db *sql.DB) error {

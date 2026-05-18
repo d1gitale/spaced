@@ -24,7 +24,7 @@ func run(sqliteConfig sqlite.Config) {
 		}
 	}()
 
-	ctx = logger.WithLogger(context.Background(), l)
+	ctx = logger.WithLogger(ctx, l)
 
 	db, err := sqlite.New(ctx, sqliteConfig)
 	if err != nil {
