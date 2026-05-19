@@ -10,13 +10,13 @@ import (
 
 type RootCmd struct {
 	root *cobra.Command
-	db   domain.CardAdapter
+	repo domain.CardAdapter
 }
 
-func NewRootCmd(ctx context.Context, db domain.CardAdapter) *RootCmd {
+func NewRootCmd(ctx context.Context, repo domain.CardAdapter) *RootCmd {
 	rootCmd := &RootCmd{}
 
-	rootCmd.db = db
+	rootCmd.repo = repo
 
 	rootCmd.root = &cobra.Command{
 		Use:   "github.com/d1gitale/spaced",
@@ -25,11 +25,11 @@ func NewRootCmd(ctx context.Context, db domain.CardAdapter) *RootCmd {
 	}
 
 	rootCmd.root.AddCommand(
-		NewAddCmd(ctx),
-		NewListCmd(ctx),
-		NewCheckCmd(ctx),
-		NewRenameCmd(ctx),
-		NewDeleteCmd(ctx),
+		NewAddCmd(repo),
+		NewListCmd(repo),
+		NewCheckCmd(repo),
+		NewRenameCmd(repo),
+		NewDeleteCmd(repo),
 	)
 
 	return rootCmd
