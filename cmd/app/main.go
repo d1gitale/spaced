@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"os/signal"
@@ -9,6 +10,7 @@ import (
 
 	"github.com/d1gitale/spaced/internal/adapter/sqlite"
 	"github.com/d1gitale/spaced/internal/cli"
+	"github.com/d1gitale/spaced/pkg/config"
 	"github.com/d1gitale/spaced/pkg/logger"
 )
 
@@ -19,8 +21,8 @@ func run(sqliteConfig sqlite.Config) error {
 	l := logger.NewLogger()
 
 	defer func() {
-		if err := l.Sync(); err != nil {
-			fmt.Fprintf(os.Stderr, "failed to sync logs: %v", err)
+		if err := l.Sync(); err != nil && !errors.Is(err, syscall.EINVAL) {
+			fmt.Fprintf(os.Stderr, "failed to sync logs: %v\n", err)
 		}
 	}()
 
@@ -33,7 +35,7 @@ func run(sqliteConfig sqlite.Config) error {
 
 	defer func() {
 		if err := db.Close(); err != nil {
-			fmt.Fprintf(os.Stderr, "failed to close db: %v", err)
+			fmt.Fprintf(os.Stderr, "failed to close db: %v\n", err)
 		}
 	}()
 
@@ -47,13 +49,18 @@ func run(sqliteConfig sqlite.Config) error {
 }
 
 func main() {
+	dbPath, err := config.DBPath()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "failed to create directories: %v", err)
+	}
+
 	if err := run(sqlite.Config{
 		BusyTimeout: 5000,
 		JournalMode: "WAL",
 		CacheSize:   8000,
-		DBPath:      "data/spaced.db",
+		DBPath:      dbPath,
 	}); err != nil {
-		fmt.Fprintf(os.Stderr, "critical: %v", err)
+		fmt.Fprintf(os.Stderr, "critical: %v\n", err)
 		os.Exit(1)
 	}
 }
