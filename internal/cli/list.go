@@ -20,7 +20,7 @@ func NewListCmd(repo domain.CardAdapter) *cobra.Command {
 
 			// TODO: move into pkg func with formatting
 			for i, c := range cards {
-				fmt.Printf("card %d: %v", i, c)
+				fmt.Printf("card %d: %v\n", i, c)
 			}
 			return nil
 		},
