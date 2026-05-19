@@ -26,7 +26,7 @@ type Repo struct {
 
 func New(ctx context.Context, c Config) (*Repo, error) {
 	dsn := fmt.Sprintf("%s?_busy_timeout=%d&_journal_mode=%s&_foreign_keys=ON&_cache_size=%d", c.DBPath, c.BusyTimeout, c.JournalMode, c.CacheSize)
-	db, err := sql.Open("go-sqlite3", dsn)
+	db, err := sql.Open("sqlite", dsn)
 	if err != nil {
 		l := logger.LoggerFromCtx(ctx)
 		l.Fatal("failed to open DB: %v", err)
@@ -35,6 +35,11 @@ func New(ctx context.Context, c Config) (*Repo, error) {
 	db.SetMaxOpenConns(1)
 	db.SetMaxIdleConns(1)
 	db.SetConnMaxLifetime(30 * time.Minute)
+
+	if err := db.PingContext(ctx); err != nil {
+		_ = db.Close()
+		return nil, fmt.Errorf("failed to ping database: %w", err)
+	}
 
 	if err := runMigrations(ctx, db); err != nil {
 		_ = db.Close()
@@ -50,20 +55,27 @@ func (repo *Repo) Close() error {
 }
 
 func (repo *Repo) GetAllCards(ctx context.Context) ([]domain.Card, error) {
-	q := `SELECT * FROM cards;`
+	q := `SELECT ID, name, due_date, repetition, interval_days, ease_factor, created_at FROM cards;`
+
 	rows, err := repo.db.QueryContext(ctx, q)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get cards from db: %v", err)
 	}
+	defer rows.Close()
+
 	var cards []domain.Card
 	for rows.Next() {
-		var card domain.Card
-		err := rows.Scan(&card)
+		card, err := scanCard(rows)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan card: %v", err)
 		}
 		cards = append(cards, card)
 	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("failed while iterating over results: %v", err)
+	}
+
 	return cards, nil
 }
 
@@ -89,8 +101,8 @@ func (repo *Repo) RemoveCard(ctx context.Context, id uuid.UUID) error {
 
 func runMigrations(ctx context.Context, db *sql.DB) error {
 	schema := `
-	CREATE TABLE cards (
-    ID             UUID PRIMARY KEY, -- или INTEGER AUTOINCREMENT для SQLite
+	CREATE TABLE IF NOT EXISTS cards (
+    ID             UUID PRIMARY KEY,
     name           TEXT NOT NULL,
     due_date       DATE NOT NULL DEFAULT CURRENT_DATE,
     repetition     INTEGER NOT NULL DEFAULT 0 CHECK (repetition >= 0),
@@ -98,9 +110,46 @@ func runMigrations(ctx context.Context, db *sql.DB) error {
     ease_factor    REAL    NOT NULL DEFAULT 2.5 CHECK (ease_factor >= 1.3),
     created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 	);
-	CREATE INDEX idx_cards_due ON cards (due_date ASC);
+	CREATE INDEX IF NOT EXISTS idx_cards_due ON cards (due_date ASC);
 	`
 
 	_, err := db.ExecContext(ctx, schema)
 	return err
+}
+
+func scanCard(rows *sql.Rows) (domain.Card, error) {
+	var c domain.Card
+	var idStr, dueDateStr, createdAtStr string
+
+	err := rows.Scan(
+		&idStr,
+		&c.Name,
+		&dueDateStr,
+		&c.Repetition,
+		&c.IntervalDays,
+		&c.EaseFactor,
+		&createdAtStr,
+	)
+	if err != nil {
+		return domain.Card{}, fmt.Errorf("failed to scan card row: %w", err)
+	}
+
+	c.ID, err = uuid.Parse(idStr)
+	if err != nil {
+		return domain.Card{}, fmt.Errorf("failed to parse uuid '%s': %w", idStr, err)
+	}
+
+	layout := "2006-01-02 15:04:05"
+
+	c.DueDate, err = time.Parse(layout, dueDateStr)
+	if err != nil {
+		c.DueDate = time.Time{}
+	}
+
+	c.CreatedAt, err = time.Parse(layout, createdAtStr)
+	if err != nil {
+		c.CreatedAt = time.Time{}
+	}
+
+	return c, nil
 }
