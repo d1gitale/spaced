@@ -12,7 +12,7 @@ import (
 	"github.com/d1gitale/spaced/pkg/logger"
 )
 
-func run(sqliteConfig sqlite.Config) {
+func run(sqliteConfig sqlite.Config) error {
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer cancel()
 
@@ -28,7 +28,7 @@ func run(sqliteConfig sqlite.Config) {
 
 	db, err := sqlite.New(ctx, sqliteConfig)
 	if err != nil {
-		l.Fatal("failed to init db: %v", err)
+		return fmt.Errorf("failed to init db: %v", err)
 	}
 
 	defer func() {
@@ -40,15 +40,20 @@ func run(sqliteConfig sqlite.Config) {
 	rootCmd := cli.NewRootCmd(ctx, db)
 
 	if err := rootCmd.Execute(ctx); err != nil {
-		fmt.Fprintf(os.Stderr, "failed to execute: %v", err)
+		return fmt.Errorf("failed to execute: %v", err)
 	}
+
+	return nil
 }
 
 func main() {
-	run(sqlite.Config{
+	if err := run(sqlite.Config{
 		BusyTimeout: 5000,
 		JournalMode: "WAL",
 		CacheSize:   8000,
 		DBPath:      "data/spaced.db",
-	})
+	}); err != nil {
+		fmt.Fprintf(os.Stderr, "critical: %v", err)
+		os.Exit(1)
+	}
 }

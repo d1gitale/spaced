@@ -50,7 +50,21 @@ func (repo *Repo) Close() error {
 }
 
 func (repo *Repo) GetAllCards(ctx context.Context) ([]domain.Card, error) {
-	panic("not implemented") // TODO: Implement
+	q := `SELECT * FROM cards;`
+	rows, err := repo.db.QueryContext(ctx, q)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get cards from db: %v", err)
+	}
+	var cards []domain.Card
+	for rows.Next() {
+		var card domain.Card
+		err := rows.Scan(&card)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan card: %v", err)
+		}
+		cards = append(cards, card)
+	}
+	return cards, nil
 }
 
 func (repo *Repo) GetDueCards(ctx context.Context) ([]domain.Card, error) {
@@ -76,7 +90,7 @@ func (repo *Repo) RemoveCard(ctx context.Context, id uuid.UUID) error {
 func runMigrations(ctx context.Context, db *sql.DB) error {
 	schema := `
 	CREATE TABLE cards (
-    id             UUID PRIMARY KEY, -- или INTEGER AUTOINCREMENT для SQLite
+    ID             UUID PRIMARY KEY, -- или INTEGER AUTOINCREMENT для SQLite
     name           TEXT NOT NULL,
     due_date       DATE NOT NULL DEFAULT CURRENT_DATE,
     repetition     INTEGER NOT NULL DEFAULT 0 CHECK (repetition >= 0),
