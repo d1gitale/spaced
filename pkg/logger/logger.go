@@ -40,6 +40,10 @@ func (l *Logger) Fatal(msg string, err error) {
 	l.l.Fatal(msg, zap.Error(err))
 }
 
+func (l *Logger) Error(msg string, err error) {
+	l.l.Error(msg, zap.Error(err))
+}
+
 func (l *Logger) Sync() error {
 	return l.l.Sync()
 }

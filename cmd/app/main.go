@@ -14,17 +14,9 @@ import (
 	"github.com/d1gitale/spaced/pkg/logger"
 )
 
-func run(sqliteConfig sqlite.Config) error {
+func run(sqliteConfig sqlite.Config, l *logger.Logger) error {
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer cancel()
-
-	l := logger.NewLogger()
-
-	defer func() {
-		if err := l.Sync(); err != nil && !errors.Is(err, syscall.EINVAL) {
-			fmt.Fprintf(os.Stderr, "failed to sync logs: %v\n", err)
-		}
-	}()
 
 	ctx = logger.WithLogger(ctx, l)
 
@@ -54,13 +46,20 @@ func main() {
 		fmt.Fprintf(os.Stderr, "failed to create directories: %v", err)
 	}
 
+	l := logger.NewLogger()
+	defer func() {
+		if err := l.Sync(); err != nil && !errors.Is(err, syscall.EINVAL) {
+			fmt.Fprintf(os.Stderr, "failed to sync logs: %v\n", err)
+		}
+	}()
+
 	if err := run(sqlite.Config{
 		BusyTimeout: 5000,
 		JournalMode: "WAL",
 		CacheSize:   8000,
 		DBPath:      dbPath,
-	}); err != nil {
-		fmt.Fprintf(os.Stderr, "critical: %v\n", err)
+	}, l); err != nil {
+		l.Error("critical: %v\n", err)
 		os.Exit(1)
 	}
 }
