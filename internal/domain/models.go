@@ -13,5 +13,4 @@ type Card struct {
 	Repetition   int
 	IntervalDays int
 	EaseFactor   float64
-	CreatedAt    time.Time
 }
