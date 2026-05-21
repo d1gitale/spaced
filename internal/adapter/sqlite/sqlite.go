@@ -24,8 +24,10 @@ type Repo struct {
 	db *sql.DB
 }
 
+const SQLiteTimeLayout = "2006-01-02T15:04:05Z"
+
 func New(ctx context.Context, c Config) (*Repo, error) {
-	dsn := fmt.Sprintf("%s?_busy_timeout=%d&_journal_mode=%s&_foreign_keys=ON&_cache_size=%d", c.DBPath, c.BusyTimeout, c.JournalMode, c.CacheSize)
+	dsn := fmt.Sprintf("%s?_busy_timeout=%d&_journal_mode=%s&_foreign_keys=ON&_cache_size=%d&_time_format=datetime", c.DBPath, c.BusyTimeout, c.JournalMode, c.CacheSize)
 	db, err := sql.Open("sqlite", dsn)
 	if err != nil {
 		l := logger.LoggerFromCtx(ctx)
@@ -43,8 +45,7 @@ func New(ctx context.Context, c Config) (*Repo, error) {
 
 	if err := runMigrations(ctx, db); err != nil {
 		_ = db.Close()
-		l := logger.LoggerFromCtx(ctx)
-		l.Fatal("failed to run migrations: %v", err)
+		return nil, fmt.Errorf("failed to run migrations: %v", err)
 	}
 
 	return &Repo{db: db}, nil
@@ -55,7 +56,7 @@ func (repo *Repo) Close() error {
 }
 
 func (repo *Repo) GetAllCards(ctx context.Context) ([]domain.Card, error) {
-	q := `SELECT ID, name, due_date, repetition, interval_days, ease_factor, created_at FROM cards;`
+	q := `SELECT ID, name, due_date, repetition, interval_days, ease_factor FROM cards;`
 
 	rows, err := repo.db.QueryContext(ctx, q)
 	if err != nil {
@@ -84,7 +85,23 @@ func (repo *Repo) GetDueCards(ctx context.Context) ([]domain.Card, error) {
 }
 
 func (repo *Repo) CreateCard(ctx context.Context, r domain.Card) error {
-	panic("not implemented") // TODO: Implement
+	q := `INSERT INTO cards (ID, name, due_date, repetition, interval_days, ease_factor) VALUES (?, ?, ?, ?, ?, ?);`
+
+	rows, err := repo.db.QueryContext(
+		ctx, q,
+		r.ID,
+		r.Name,
+		r.DueDate.Format(SQLiteTimeLayout),
+		r.Repetition,
+		r.IntervalDays,
+		r.EaseFactor,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to insert card into db: %v", err)
+	}
+	defer rows.Close()
+
+	return nil
 }
 
 func (repo *Repo) MarkReviewed(ctx context.Context, id uuid.UUID, easinessFactor float64, interval int, repetition int, due time.Time) error {
@@ -104,11 +121,10 @@ func runMigrations(ctx context.Context, db *sql.DB) error {
 	CREATE TABLE IF NOT EXISTS cards (
     ID             UUID PRIMARY KEY,
     name           TEXT NOT NULL,
-    due_date       DATE NOT NULL DEFAULT CURRENT_DATE,
+    due_date       DATE NOT NULL,
     repetition     INTEGER NOT NULL DEFAULT 0 CHECK (repetition >= 0),
     interval_days  INTEGER NOT NULL DEFAULT 0 CHECK (interval_days >= 0),
-    ease_factor    REAL    NOT NULL DEFAULT 2.5 CHECK (ease_factor >= 1.3),
-    created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    ease_factor    REAL    NOT NULL DEFAULT 2.5 CHECK (ease_factor >= 1.3)
 	);
 	CREATE INDEX IF NOT EXISTS idx_cards_due ON cards (due_date ASC);
 	`
@@ -119,7 +135,7 @@ func runMigrations(ctx context.Context, db *sql.DB) error {
 
 func scanCard(rows *sql.Rows) (domain.Card, error) {
 	var c domain.Card
-	var idStr, dueDateStr, createdAtStr string
+	var idStr, dueDateStr string
 
 	err := rows.Scan(
 		&idStr,
@@ -128,7 +144,6 @@ func scanCard(rows *sql.Rows) (domain.Card, error) {
 		&c.Repetition,
 		&c.IntervalDays,
 		&c.EaseFactor,
-		&createdAtStr,
 	)
 	if err != nil {
 		return domain.Card{}, fmt.Errorf("failed to scan card row: %w", err)
@@ -139,16 +154,9 @@ func scanCard(rows *sql.Rows) (domain.Card, error) {
 		return domain.Card{}, fmt.Errorf("failed to parse uuid '%s': %w", idStr, err)
 	}
 
-	layout := "2006-01-02 15:04:05"
-
-	c.DueDate, err = time.Parse(layout, dueDateStr)
+	c.DueDate, err = time.Parse(SQLiteTimeLayout, dueDateStr)
 	if err != nil {
 		c.DueDate = time.Time{}
-	}
-
-	c.CreatedAt, err = time.Parse(layout, createdAtStr)
-	if err != nil {
-		c.CreatedAt = time.Time{}
 	}
 
 	return c, nil
