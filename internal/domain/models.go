@@ -1,15 +1,13 @@
 package domain
 
 import (
-	"time"
-
 	"github.com/google/uuid"
 )
 
 type Card struct {
 	ID           uuid.UUID
 	Name         string
-	DueDate      time.Time
+	DueDate      string
 	Repetition   int
 	IntervalDays int
 	EaseFactor   float64
