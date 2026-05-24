@@ -9,15 +9,26 @@ import (
 
 func NewRenameCmd(repo domain.CardAdapter) *cobra.Command {
 	return &cobra.Command{
-		Use:   "rename <old_name> <new_name>",
+		Use:   "rename --id <id> --name <name>",
 		Short: "Rename a task",
-		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			oldName := args[0]
-			newName := args[1]
-			fmt.Printf("Renaming task from %s to %s\n", oldName, newName)
+			ctx := cmd.Context()
+
+			id, err := cmd.Flags().GetInt64("id")
+			if err != nil {
+				return fmt.Errorf("failed to get --id flag value: %v", err)
+			}
+			name, err := cmd.Flags().GetString("name")
+			if err != nil {
+				return fmt.Errorf("failed to get --name flag value: %v", err)
+			}
+
+			err = repo.RenameCard(ctx, id, name)
+			if err != nil {
+				return fmt.Errorf("failed to rename card: %v", err)
+			}
+
 			return nil
-			// TODO: Implement logic
 		},
 	}
 }

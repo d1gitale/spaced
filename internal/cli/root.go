@@ -41,6 +41,19 @@ func NewRootCmd(ctx context.Context, repo domain.CardAdapter) (*RootCmd, error) 
 		return nil, fmt.Errorf("looks like there is a typo: %v", err)
 	}
 
+	renameCmd := NewRenameCmd(repo)
+	renameCmd.Flags().Int64P("id", "i", 0, "integer id of a card to rename")
+	err = renameCmd.MarkFlagRequired("id")
+	if err != nil {
+		return nil, fmt.Errorf("looks like there is a typo: %v", err)
+	}
+
+	renameCmd.Flags().StringP("name", "n", "", "new name for a card")
+	err = renameCmd.MarkFlagRequired("name")
+	if err != nil {
+		return nil, fmt.Errorf("looks like there is a typo: %v", err)
+	}
+
 	deleteCmd := NewDeleteCmd(repo)
 	deleteCmd.Flags().Int64P("id", "i", 0, "integer id of a card to delete")
 	err = deleteCmd.MarkFlagRequired("id")
