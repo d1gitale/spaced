@@ -17,7 +17,7 @@ func PrintCard(ctx context.Context, card *domain.Card, flag string) error {
 			return fmt.Errorf("failed to print JSON: %v", err)
 		}
 	default:
-		fmt.Println(card)
+		fmt.Println(*card)
 	}
 
 	return nil
