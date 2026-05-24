@@ -31,7 +31,10 @@ func run(sqliteConfig sqlite.Config, l *logger.Logger) error {
 		}
 	}()
 
-	rootCmd := cli.NewRootCmd(ctx, db)
+	rootCmd, err := cli.NewRootCmd(ctx, db)
+	if err != nil {
+		return fmt.Errorf("failed to create root cmd: %v", err)
+	}
 
 	if err := rootCmd.Execute(ctx); err != nil {
 		return fmt.Errorf("failed to execute: %v", err)
