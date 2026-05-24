@@ -105,7 +105,26 @@ func (repo *Repo) CreateCard(ctx context.Context, r domain.Card) error {
 }
 
 func (repo *Repo) MarkReviewed(ctx context.Context, id uuid.UUID, easinessFactor float64, interval int, repetition int, due time.Time) error {
-	panic("not implemented") // TODO: Implement
+	q := "UPDATE cards SET due_date = ?, repetition = ?, interval_days = ?, ease_factor = ? WHERE ID = ?;"
+
+	stmt, err := repo.db.PrepareContext(ctx, q)
+	if err != nil {
+		return fmt.Errorf("failed to prepare statement: %v", err)
+	}
+
+	_, err = stmt.ExecContext(
+		ctx,
+		due,
+		repetition,
+		interval,
+		easinessFactor,
+		id,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to mark card reviewed in db: %v", err)
+	}
+
+	return nil
 }
 
 func (repo *Repo) RenameCard(ctx context.Context, id uuid.UUID, newName string) error {
