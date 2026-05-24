@@ -10,7 +10,6 @@ import (
 	"github.com/d1gitale/spaced/internal/domain"
 	"github.com/d1gitale/spaced/pkg/constants"
 	"github.com/d1gitale/spaced/pkg/logger"
-	"github.com/google/uuid"
 	_ "modernc.org/sqlite"
 )
 
@@ -78,6 +77,35 @@ func (repo *Repo) GetAllCards(ctx context.Context) ([]domain.Card, error) {
 	return cards, nil
 }
 
+func (repo *Repo) GetCardByID(ctx context.Context, id int64) (domain.Card, error) {
+	q := `SELECT ID, name, due_date, repetition, interval_days, ease_factor FROM cards WHERE ID = ?`
+
+	row := repo.db.QueryRowContext(ctx, q, id)
+
+	card := domain.Card{}
+	var dueDateStr string
+	err := row.Scan(
+		&card.ID,
+		&card.Name,
+		&dueDateStr,
+		&card.Repetition,
+		&card.IntervalDays,
+		&card.EaseFactor,
+	)
+	if err != nil {
+		return domain.Card{}, fmt.Errorf("failed to get card %d from db: %v", id, err)
+	}
+
+	parsedDue, err := time.Parse(constants.SQLiteTimeLayout, dueDateStr)
+	if err != nil {
+		return domain.Card{}, fmt.Errorf("failed to parse due_date from db: %v", err)
+	}
+
+	card.DueDate = parsedDue.Format(constants.SpacedDateFmt)
+
+	return card, nil
+}
+
 func (repo *Repo) GetDueCards(ctx context.Context) ([]domain.Card, error) {
 	cards, err := repo.GetAllCards(ctx)
 	if err != nil {
@@ -127,7 +155,7 @@ func (repo *Repo) CreateCard(ctx context.Context, r domain.Card) error {
 	return nil
 }
 
-func (repo *Repo) MarkReviewed(ctx context.Context, id uuid.UUID, easinessFactor float64, interval int, repetition int, due time.Time) error {
+func (repo *Repo) MarkReviewed(ctx context.Context, id int64, easinessFactor float64, interval int, repetition int, due string) error {
 	q := "UPDATE cards SET due_date = ?, repetition = ?, interval_days = ?, ease_factor = ? WHERE ID = ?;"
 
 	stmt, err := repo.db.PrepareContext(ctx, q)
@@ -150,7 +178,7 @@ func (repo *Repo) MarkReviewed(ctx context.Context, id uuid.UUID, easinessFactor
 	return nil
 }
 
-func (repo *Repo) RenameCard(ctx context.Context, id uuid.UUID, newName string) error {
+func (repo *Repo) RenameCard(ctx context.Context, id int64, newName string) error {
 	q := "UPDATE cards SET name = ? WHERE ID = ?;"
 
 	stmt, err := repo.db.PrepareContext(ctx, q)
@@ -166,7 +194,7 @@ func (repo *Repo) RenameCard(ctx context.Context, id uuid.UUID, newName string) 
 	return nil
 }
 
-func (repo *Repo) RemoveCard(ctx context.Context, id uuid.UUID) error {
+func (repo *Repo) RemoveCard(ctx context.Context, id int64) error {
 	q := "DELETE FROM cards WHERE ID = ?;"
 
 	stmt, err := repo.db.PrepareContext(ctx, q)
