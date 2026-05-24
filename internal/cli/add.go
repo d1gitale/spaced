@@ -7,7 +7,6 @@ import (
 	"github.com/d1gitale/spaced/internal/domain"
 	"github.com/d1gitale/spaced/pkg/constants"
 	"github.com/d1gitale/spaced/pkg/sm2"
-	"github.com/google/uuid"
 	"github.com/spf13/cobra"
 )
 
@@ -19,7 +18,6 @@ func NewAddCmd(repo domain.CardAdapter) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := cmd.Context()
 
-			id := uuid.New()
 			name := args[0]
 			repetition := 0
 			ef := 2.5
@@ -27,7 +25,6 @@ func NewAddCmd(repo domain.CardAdapter) *cobra.Command {
 			due := time.Now().AddDate(0, 0, interval).Format(constants.SpacedDateFmt)
 
 			card := domain.Card{
-				ID:           id,
 				Name:         name,
 				Repetition:   repetition,
 				EaseFactor:   ef,

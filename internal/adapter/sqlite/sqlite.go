@@ -100,7 +100,7 @@ func (repo *Repo) GetDueCards(ctx context.Context) ([]domain.Card, error) {
 }
 
 func (repo *Repo) CreateCard(ctx context.Context, r domain.Card) error {
-	q := `INSERT INTO cards (ID, name, due_date, repetition, interval_days, ease_factor) VALUES (?, ?, ?, ?, ?, ?);`
+	q := `INSERT INTO cards (name, due_date, repetition, interval_days, ease_factor) VALUES (?, ?, ?, ?, ?);`
 
 	stmt, err := repo.db.PrepareContext(ctx, q)
 	if err != nil {
@@ -114,7 +114,6 @@ func (repo *Repo) CreateCard(ctx context.Context, r domain.Card) error {
 
 	_, err = stmt.ExecContext(
 		ctx,
-		r.ID,
 		r.Name,
 		dueDate.Format(constants.SQLiteTimeLayout),
 		r.Repetition,
@@ -186,7 +185,7 @@ func (repo *Repo) RemoveCard(ctx context.Context, id uuid.UUID) error {
 func runMigrations(ctx context.Context, db *sql.DB) error {
 	schema := `
 	CREATE TABLE IF NOT EXISTS cards (
-    ID             UUID PRIMARY KEY,
+    ID             INTEGER PRIMARY KEY AUTOINCREMENT,
     name           TEXT NOT NULL,
     due_date       DATE NOT NULL,
     repetition     INTEGER NOT NULL DEFAULT 0 CHECK (repetition >= 0),
@@ -202,10 +201,10 @@ func runMigrations(ctx context.Context, db *sql.DB) error {
 
 func scanCard(rows *sql.Rows) (domain.Card, error) {
 	var c domain.Card
-	var idStr, dueDateStr string
+	var dueDateStr string
 
 	err := rows.Scan(
-		&idStr,
+		&c.ID,
 		&c.Name,
 		&dueDateStr,
 		&c.Repetition,
@@ -214,11 +213,6 @@ func scanCard(rows *sql.Rows) (domain.Card, error) {
 	)
 	if err != nil {
 		return domain.Card{}, fmt.Errorf("failed to scan card row: %w", err)
-	}
-
-	c.ID, err = uuid.Parse(idStr)
-	if err != nil {
-		return domain.Card{}, fmt.Errorf("failed to parse uuid '%s': %w", idStr, err)
 	}
 
 	fmtDate, err := time.Parse(constants.SQLiteTimeLayout, dueDateStr)
