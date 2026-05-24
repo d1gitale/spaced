@@ -44,7 +44,7 @@ func NewRootCmd(ctx context.Context, repo domain.CardAdapter) (*RootCmd, error) 
 	rootCmd.root.AddCommand(
 		NewAddCmd(repo),
 		listCmd,
-		NewCheckCmd(repo),
+		checkCmd,
 		NewRenameCmd(repo),
 		NewDeleteCmd(repo),
 	)
