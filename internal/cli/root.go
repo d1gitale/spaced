@@ -24,9 +24,12 @@ func NewRootCmd(ctx context.Context, repo domain.CardAdapter) *RootCmd {
 		Long:  "spaced is a spaced repetition tracker that helps organizing your schedule and works well with Waybar",
 	}
 
+	listCmd := NewListCmd(repo)
+	listCmd.Flags().String("format", "", "format to print cards in")
+
 	rootCmd.root.AddCommand(
 		NewAddCmd(repo),
-		NewListCmd(repo),
+		listCmd,
 		NewCheckCmd(repo),
 		NewRenameCmd(repo),
 		NewDeleteCmd(repo),

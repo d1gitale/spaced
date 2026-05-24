@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/d1gitale/spaced/internal/domain"
+	"github.com/d1gitale/spaced/pkg/format"
 	"github.com/spf13/cobra"
 )
 
@@ -18,10 +19,18 @@ func NewListCmd(repo domain.CardAdapter) *cobra.Command {
 				return fmt.Errorf("failed to list cards: %v", err)
 			}
 
-			// TODO: move into pkg func with formatting
-			for i, c := range cards {
-				fmt.Printf("card %d: %v\n", i, c)
+			fmtFlag, err := cmd.Flags().GetString("format")
+			if err != nil {
+				return fmt.Errorf("failed to get --format flag value: %v", err)
 			}
+
+			for _, c := range cards {
+				err := format.PrintCard(ctx, &c, fmtFlag)
+				if err != nil {
+					return fmt.Errorf("failed to print card: %v", err)
+				}
+			}
+
 			return nil
 		},
 	}
