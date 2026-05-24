@@ -62,7 +62,6 @@ func (repo *Repo) GetAllCards(ctx context.Context) ([]domain.Card, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to get cards from db: %v", err)
 	}
-	defer rows.Close()
 
 	var cards []domain.Card
 	for rows.Next() {
@@ -87,8 +86,13 @@ func (repo *Repo) GetDueCards(ctx context.Context) ([]domain.Card, error) {
 func (repo *Repo) CreateCard(ctx context.Context, r domain.Card) error {
 	q := `INSERT INTO cards (ID, name, due_date, repetition, interval_days, ease_factor) VALUES (?, ?, ?, ?, ?, ?);`
 
-	rows, err := repo.db.QueryContext(
-		ctx, q,
+	stmt, err := repo.db.PrepareContext(ctx, q)
+	if err != nil {
+		return fmt.Errorf("failed to prepare statement: %v", err)
+	}
+
+	_, err = stmt.ExecContext(
+		ctx,
 		r.ID,
 		r.Name,
 		r.DueDate.Format(SQLiteTimeLayout),
@@ -99,7 +103,6 @@ func (repo *Repo) CreateCard(ctx context.Context, r domain.Card) error {
 	if err != nil {
 		return fmt.Errorf("failed to insert card into db: %v", err)
 	}
-	defer rows.Close()
 
 	return nil
 }
