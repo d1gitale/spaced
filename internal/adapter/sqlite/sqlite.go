@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/d1gitale/spaced/internal/domain"
+	"github.com/d1gitale/spaced/pkg/constants"
 	"github.com/d1gitale/spaced/pkg/logger"
 	"github.com/google/uuid"
 	_ "modernc.org/sqlite"
@@ -23,8 +24,6 @@ type Config struct {
 type Repo struct {
 	db *sql.DB
 }
-
-const SQLiteTimeLayout = "2006-01-02T15:04:05Z"
 
 func New(ctx context.Context, c Config) (*Repo, error) {
 	dsn := fmt.Sprintf("%s?_busy_timeout=%d&_journal_mode=%s&_foreign_keys=ON&_cache_size=%d&_time_format=datetime", c.DBPath, c.BusyTimeout, c.JournalMode, c.CacheSize)
@@ -91,11 +90,16 @@ func (repo *Repo) CreateCard(ctx context.Context, r domain.Card) error {
 		return fmt.Errorf("failed to prepare statement: %v", err)
 	}
 
+	dueDate, err := time.Parse(constants.SpacedDateFmt, r.DueDate)
+	if err != nil {
+		return fmt.Errorf("failed to parse date from model: %v", err)
+	}
+
 	_, err = stmt.ExecContext(
 		ctx,
 		r.ID,
 		r.Name,
-		r.DueDate.Format(SQLiteTimeLayout),
+		dueDate.Format(constants.SQLiteTimeLayout),
 		r.Repetition,
 		r.IntervalDays,
 		r.EaseFactor,
@@ -200,10 +204,11 @@ func scanCard(rows *sql.Rows) (domain.Card, error) {
 		return domain.Card{}, fmt.Errorf("failed to parse uuid '%s': %w", idStr, err)
 	}
 
-	c.DueDate, err = time.Parse(SQLiteTimeLayout, dueDateStr)
+	fmtDate, err := time.Parse(constants.SQLiteTimeLayout, dueDateStr)
 	if err != nil {
-		c.DueDate = time.Time{}
+		return domain.Card{}, fmt.Errorf("failed to parse date from db: %v", err)
 	}
+	c.DueDate = fmtDate.Format(constants.SpacedDateFmt)
 
 	return c, nil
 }

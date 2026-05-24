@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/d1gitale/spaced/internal/domain"
+	"github.com/d1gitale/spaced/pkg/constants"
 	"github.com/d1gitale/spaced/pkg/sm2"
 	"github.com/google/uuid"
 	"github.com/spf13/cobra"
@@ -23,7 +24,7 @@ func NewAddCmd(repo domain.CardAdapter) *cobra.Command {
 			repetition := 0
 			ef := 2.5
 			interval := sm2.GetInterval(ef, repetition, 0)
-			due := time.Now().AddDate(0, 0, interval)
+			due := time.Now().AddDate(0, 0, interval).Format(constants.SpacedDateFmt)
 
 			card := domain.Card{
 				ID:           id,
