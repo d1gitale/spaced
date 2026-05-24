@@ -79,7 +79,24 @@ func (repo *Repo) GetAllCards(ctx context.Context) ([]domain.Card, error) {
 }
 
 func (repo *Repo) GetDueCards(ctx context.Context) ([]domain.Card, error) {
-	panic("not implemented") // TODO: Implement
+	cards, err := repo.GetAllCards(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var resSet []domain.Card
+	for _, c := range cards {
+		due, err := time.Parse(constants.SpacedDateFmt, c.DueDate)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse c.DueDate: %v", err)
+		}
+
+		if time.Now().Compare(due) != -1 {
+			resSet = append(resSet, c)
+		}
+	}
+
+	return resSet, nil
 }
 
 func (repo *Repo) CreateCard(ctx context.Context, r domain.Card) error {
