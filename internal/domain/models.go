@@ -5,10 +5,10 @@ import (
 )
 
 type Card struct {
-	ID           uuid.UUID
-	Name         string
-	DueDate      string
-	Repetition   int
-	IntervalDays int
-	EaseFactor   float64
+	ID           uuid.UUID `json:"id"`
+	Name         string    `json:"name"`
+	DueDate      string    `json:"dueDate"`
+	Repetition   int       `json:"repetition"`
+	IntervalDays int       `json:"interval"`
+	EaseFactor   float64   `json:"EF"`
 }
