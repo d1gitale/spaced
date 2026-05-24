@@ -147,7 +147,19 @@ func (repo *Repo) RenameCard(ctx context.Context, id uuid.UUID, newName string) 
 }
 
 func (repo *Repo) RemoveCard(ctx context.Context, id uuid.UUID) error {
-	panic("not implemented") // TODO: Implement
+	q := "DELETE FROM cards WHERE ID = ?;"
+
+	stmt, err := repo.db.PrepareContext(ctx, q)
+	if err != nil {
+		return fmt.Errorf("failed to prepare statement: %v", err)
+	}
+
+	_, err = stmt.ExecContext(ctx, id)
+	if err != nil {
+		return fmt.Errorf("failed to remove card from db: %v", err)
+	}
+
+	return nil
 }
 
 func runMigrations(ctx context.Context, db *sql.DB) error {
