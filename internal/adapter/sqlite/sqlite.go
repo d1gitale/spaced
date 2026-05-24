@@ -131,7 +131,19 @@ func (repo *Repo) MarkReviewed(ctx context.Context, id uuid.UUID, easinessFactor
 }
 
 func (repo *Repo) RenameCard(ctx context.Context, id uuid.UUID, newName string) error {
-	panic("not implemented") // TODO: Implement
+	q := "UPDATE cards SET name = ? WHERE ID = ?;"
+
+	stmt, err := repo.db.PrepareContext(ctx, q)
+	if err != nil {
+		return fmt.Errorf("failed to prepare statement: %v", err)
+	}
+
+	_, err = stmt.ExecContext(ctx, newName, id)
+	if err != nil {
+		return fmt.Errorf("failed to rename card in db: %v", err)
+	}
+
+	return nil
 }
 
 func (repo *Repo) RemoveCard(ctx context.Context, id uuid.UUID) error {
