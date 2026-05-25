@@ -26,7 +26,7 @@ TEMP_DIR=$(mktemp -d)
 trap "rm -rf $TEMP_DIR" EXIT
 
 git clone --depth 1 --branch $BRANCH $REPO_URL "$TEMP_DIR"
-cd "$TEMP_DIR"
+cd "$TEMP_DIR/cmd/app"
 
 CGO_ENABLED=0 go build -ldflags="-s -w" -o "$APP_NAME" .
 
