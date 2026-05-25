@@ -119,7 +119,10 @@ func (repo *Repo) GetDueCards(ctx context.Context) ([]domain.Card, error) {
 			return nil, fmt.Errorf("failed to parse c.DueDate: %v", err)
 		}
 
-		if time.Now().Compare(due) != -1 {
+		year, month, day := time.Now().Date()
+		isDueToday := due.Local().Compare(time.Date(year, month, day, 0, 0, 0, 0, time.UTC).Local())
+
+		if isDueToday != 1 {
 			resSet = append(resSet, c)
 		}
 	}
