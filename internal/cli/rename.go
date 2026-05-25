@@ -16,10 +16,12 @@ func NewRenameCmd(repo domain.CardAdapter) *cobra.Command {
 
 			id, err := cmd.Flags().GetInt64("id")
 			if err != nil {
+				fmt.Println("invalid id")
 				return fmt.Errorf("failed to get --id flag value: %v", err)
 			}
 			name, err := cmd.Flags().GetString("name")
 			if err != nil {
+				fmt.Println("invalid name")
 				return fmt.Errorf("failed to get --name flag value: %v", err)
 			}
 

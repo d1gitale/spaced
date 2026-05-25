@@ -21,6 +21,7 @@ func NewListCmd(repo domain.CardAdapter) *cobra.Command {
 
 			fmtFlag, err := cmd.Flags().GetString("format")
 			if err != nil {
+				fmt.Println("invalid format value")
 				return fmt.Errorf("failed to get --format flag value: %v", err)
 			}
 

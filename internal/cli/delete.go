@@ -15,6 +15,7 @@ func NewDeleteCmd(repo domain.CardAdapter) *cobra.Command {
 			ctx := cmd.Context()
 			id, err := cmd.Flags().GetInt64("id")
 			if err != nil {
+				fmt.Println("invalid id")
 				return fmt.Errorf("failed to get --id flag: %v", err)
 			}
 
