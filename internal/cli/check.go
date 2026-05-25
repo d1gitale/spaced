@@ -38,20 +38,26 @@ func NewCheckCmd(repo domain.CardAdapter) *cobra.Command {
 				return fmt.Errorf("failed to get card %d by id: %v", id, err)
 			}
 
-			newInterval := sm2.GetInterval(card.EaseFactor, card.Repetition, card.IntervalDays)
-			newEF := sm2.GetEF(card.EaseFactor, score)
-			newRepetition := card.Repetition + 1
-
 			dueParsed, err := time.Parse(constants.SpacedDateFmt, card.DueDate)
 			if err != nil {
 				return fmt.Errorf("failed to parse card.DueDate: %v", err)
 			}
 
-			newDue := dueParsed.AddDate(0, 0, card.IntervalDays).Format(constants.SpacedDateFmt)
+			year, month, day := time.Now().Date()
+			isDueToday := dueParsed.Local().Compare(time.Date(year, month, day, 0, 0, 0, 0, time.UTC).Local())
+			if isDueToday != 1 {
+				newDue := dueParsed.AddDate(0, 0, card.IntervalDays).Format(constants.SpacedDateFmt)
 
-			err = repo.MarkReviewed(ctx, id, newEF, newInterval, newRepetition, newDue)
-			if err != nil {
-				return fmt.Errorf("failed to mark card %d reviewed: %v", id, err)
+				newInterval := sm2.GetInterval(card.EaseFactor, card.Repetition, card.IntervalDays)
+				newEF := sm2.GetEF(card.EaseFactor, score)
+				newRepetition := card.Repetition + 1
+
+				err = repo.MarkReviewed(ctx, id, newEF, newInterval, newRepetition, newDue)
+				if err != nil {
+					return fmt.Errorf("failed to mark card %d reviewed: %v", id, err)
+				}
+			} else {
+				return fmt.Errorf("card is not due today")
 			}
 
 			return nil
