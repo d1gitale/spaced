@@ -14,21 +14,46 @@ func NewListCmd(repo domain.CardAdapter) *cobra.Command {
 		Short: "List all tasks",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := cmd.Context()
-			cards, err := repo.GetAllCards(ctx)
+			dueFlag, err := cmd.Flags().GetBool("due")
 			if err != nil {
-				return fmt.Errorf("failed to list cards: %v", err)
+				return fmt.Errorf("failed to get --due flag value: %v", err)
 			}
 
-			fmtFlag, err := cmd.Flags().GetString("format")
-			if err != nil {
-				fmt.Println("invalid format value")
-				return fmt.Errorf("failed to get --format flag value: %v", err)
-			}
-
-			for _, c := range cards {
-				err := format.PrintCard(ctx, &c, fmtFlag)
+			if dueFlag {
+				cards, err := repo.GetDueCards(ctx)
 				if err != nil {
-					return fmt.Errorf("failed to print card: %v", err)
+					return fmt.Errorf("failed to list cards: %v", err)
+				}
+
+				fmtFlag, err := cmd.Flags().GetString("format")
+				if err != nil {
+					fmt.Println("invalid format value")
+					return fmt.Errorf("failed to get --format flag value: %v", err)
+				}
+
+				for _, c := range cards {
+					err := format.PrintCard(ctx, &c, fmtFlag)
+					if err != nil {
+						return fmt.Errorf("failed to print card: %v", err)
+					}
+				}
+			} else {
+				cards, err := repo.GetAllCards(ctx)
+				if err != nil {
+					return fmt.Errorf("failed to list cards: %v", err)
+				}
+
+				fmtFlag, err := cmd.Flags().GetString("format")
+				if err != nil {
+					fmt.Println("invalid format value")
+					return fmt.Errorf("failed to get --format flag value: %v", err)
+				}
+
+				for _, c := range cards {
+					err := format.PrintCard(ctx, &c, fmtFlag)
+					if err != nil {
+						return fmt.Errorf("failed to print card: %v", err)
+					}
 				}
 			}
 

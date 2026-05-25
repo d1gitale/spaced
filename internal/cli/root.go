@@ -26,7 +26,8 @@ func NewRootCmd(ctx context.Context, repo domain.CardAdapter) (*RootCmd, error) 
 	}
 
 	listCmd := NewListCmd(repo)
-	listCmd.Flags().String("format", "json", "format to print cards in")
+	listCmd.Flags().StringP("format", "f", "json", "format to print cards in")
+	listCmd.Flags().BoolP("due", "d", false, "determines whether to list only due cards")
 
 	checkCmd := NewCheckCmd(repo)
 	checkCmd.Flags().Int64P("id", "i", 0, "integer id of a card to check")
